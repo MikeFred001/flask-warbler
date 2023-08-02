@@ -47,5 +47,9 @@ class LoginForm(FlaskForm):
     )
 
 
+#class UserProfileEditForm(FlaskForm):
+    """User profile edit form."""
+
+
 class CSRFForm(FlaskForm):
     """for CSRF protection"""

@@ -173,13 +173,15 @@ def list_users():
 def show_user(user_id):
     """Show user profile."""
 
-    if not g.user or g.user.id != user_id:
+    user = User.query.get_or_404(user_id)
+
+    if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     return render_template(
         'users/show.html',
-        user=g.user,
+        user=user,
         form=g.csrf_form
     )
     # May need to rework to show target user's profile
@@ -189,13 +191,15 @@ def show_user(user_id):
 def show_following(user_id):
     """Show list of people this user is following."""
 
-    if not g.user or g.user.id != user_id:
+    user = User.query.get_or_404(user_id)
+
+    if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     return render_template(
         'users/following.html',
-        user=g.user,
+        user=user,
         form=g.csrf_form
     )
 
@@ -204,13 +208,15 @@ def show_following(user_id):
 def show_followers(user_id):
     """Show list of followers of this user."""
 
-    if not g.user or g.user.id != user_id:
+    user = User.query.get_or_404(user_id)
+
+    if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     return render_template(
         'users/followers.html',
-        user=g.user,
+        user=user,
         form=g.csrf_form
     )
 
@@ -256,11 +262,12 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
+    #form =
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # IMPLEMENT THIS
+    return render_template('users/edit.html', user=g.user)
 
 
 @app.post('/users/delete')
