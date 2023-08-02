@@ -31,6 +31,7 @@
         {% block searchbox %}
         <li>
           <form class="navbar-form navbar-end" action="/users">
+            {{ form.hidden_tag() }}
             <input name="q" class="form-control" placeholder="Search Warbler" aria-label="Search" id="search">
             <button class="btn btn-default">
               <span class="bi bi-search"></span>
@@ -54,8 +55,6 @@
           {{ form.hidden_tag() }}
           <li><button class="btn btn-light"> Log out</button></li>
         </form>
-
-
         {% endif %}
 
       </ul>
