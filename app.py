@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+# SECRET_KEY = os.environ['SECRET_KEY']
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
