@@ -6,8 +6,10 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFForm
 from models import db, connect_db, User, Message
+
+from werkzeug.exceptions import Unauthorized
 
 load_dotenv()
 
@@ -115,8 +117,18 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user and redirect to homepage."""
+    #csrf_form = CSRFForm()
+    #form = g.csrf_form
+    form = CSRFForm()
 
-    form = g.csrf_form
+    if form.validate_on_submit():
+        do_logout()
+        flash ("successful logout")
+    else:
+        raise Unauthorized()
+
+
+    return redirect('/')
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
@@ -313,6 +325,7 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
+    form = CSRFForm()
 
     if g.user:
         messages = (Message
@@ -321,7 +334,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')
