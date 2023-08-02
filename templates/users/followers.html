@@ -25,10 +25,12 @@
             {% if g.user.is_following(follower) %}
             <form method="POST"
                   action="/users/stop-following/{{ follower.id }}">
+              {{ form.hidden_tag() }}
               <button class="btn btn-primary btn-sm">Unfollow</button>
             </form>
             {% else %}
             <form method="POST" action="/users/follow/{{ follower.id }}">
+              {{ form.hidden_tag() }}
               <button class="btn btn-outline-primary btn-sm">
                 Follow
               </button>

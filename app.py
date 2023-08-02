@@ -27,8 +27,7 @@ connect_db(app)
 
 
 ##############################################################################
-# User signup/login/logout
-
+# Before_Request functions
 
 @app.before_request
 def add_user_to_g():
@@ -36,10 +35,20 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-
     else:
         g.user = None
 
+
+@app.before_request
+def add_csrf_to_g():
+    """Adds CSRF form to Flask global if ..."""
+
+    g.csrf_form = CSRFForm()
+
+
+
+##############################################################################
+# User signup/login/logout
 
 def do_login(user):
     """Log in user."""
@@ -117,9 +126,8 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user and redirect to homepage."""
-    #csrf_form = CSRFForm()
-    #form = g.csrf_form
-    form = CSRFForm()
+
+    form = g.csrf_form
 
     if form.validate_on_submit():
         do_logout()
@@ -131,8 +139,6 @@ def logout():
 
     return redirect('/')
 
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
 
 
 ##############################################################################
@@ -156,50 +162,57 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users)
+    return render_template(
+        'users/index.html',
+        users=users,
+        form=g.csrf_form
+    )
 
 
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
 
-    form = CSRFForm()
-
-    if not g.user:
+    if not g.user or g.user.id != user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = User.query.get_or_404(user_id)
-
-    return render_template('users/show.html', user=user, form=form)
+    return render_template(
+        'users/show.html',
+        user=g.user,
+        form=g.csrf_form
+    )
+    # May need to rework to show target user's profile
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
 
-    form = CSRFForm()
-
-    if not g.user:
+    if not g.user or g.user.id != user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=form)
+    return render_template(
+        'users/following.html',
+        user=g.user,
+        form=g.csrf_form
+    )
 
 
 @app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
     """Show list of followers of this user."""
 
-    form = CSRFForm()
-
-    if not g.user:
+    if not g.user or g.user.id != user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=form)
+    return render_template(
+        'users/followers.html',
+        user=g.user,
+        form=g.csrf_form
+    )
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -227,11 +240,12 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
-    if not g.user:
+    followed_user = User.query.get_or_404(follow_id)
+
+    if not g.user or followed_user not in g.user.following:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
     g.user.following.remove(followed_user)
     db.session.commit()
 
@@ -241,6 +255,10 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
     # IMPLEMENT THIS
 
@@ -262,6 +280,7 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
 
 
 ##############################################################################
@@ -294,14 +313,12 @@ def add_message():
 def show_message(message_id):
     """Show a message."""
 
-    form = CSRFForm()
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg, form=form)
+    return render_template('messages/show.html', message=msg, form=g.csrf_form)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -323,9 +340,9 @@ def delete_message(message_id):
     return redirect(f"/users/{g.user.id}")
 
 
+
 ##############################################################################
 # Homepage and error pages
-
 
 @app.get('/')
 def homepage():
@@ -334,7 +351,6 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-    form = CSRFForm()
 
     if g.user:
         messages = (Message
@@ -343,7 +359,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=form)
+        return render_template('home.html', messages=messages, form=g.csrf_form)
 
     else:
         return render_template('home-anon.html')

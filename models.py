@@ -119,6 +119,7 @@ class User(db.Model):
         db.session.add(user)
         return user
 
+
     @classmethod
     def authenticate(cls, username, password):
         """Find user with `username` and `password`.
@@ -139,6 +140,7 @@ class User(db.Model):
                 return user
 
         return False
+
 
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
