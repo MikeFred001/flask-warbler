@@ -400,6 +400,10 @@ def homepage():
         return render_template('home-anon.html')
 
 
+
+##############################################################################
+# After Requests
+
 @app.after_request
 def add_header(response):
     """Add non-caching headers on every request."""

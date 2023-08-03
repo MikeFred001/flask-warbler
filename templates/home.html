@@ -56,6 +56,11 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
+              <form action="/users" method="GET">
+                {{ form.hidden_tag() }}
+                <a><button  id="like-button" class="btn btn-outline-primary btn-sm bi bi-heart">
+                </button></a>
+              </form>
             </div>
           </li>
         {% endfor %}
