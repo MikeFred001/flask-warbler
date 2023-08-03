@@ -259,40 +259,31 @@ def stop_following(follow_id):
 def profile():
     """GET: Shows user profile edit page.
     POST: Update profile for current user and redirects to user detail page."""
-    #TODO: Reassign g.user to global variable name
-    if not g.user:
+    user = g.user
+
+    if not user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = UserProfileEditForm(obj=g.user)
+    form = UserProfileEditForm(obj=user)
 
     if form.validate_on_submit():
-        #form.username.data etc.
-        g.user.username = request.form.get('username', g.user.username)
-        g.user.email = request.form.get('email', g.user.email)
-        g.user.bio = request.form.get('bio')
+        user.username = form.username.data
+        if User.authenticate(user.username, request.form.get('password')):
+            user.email = form.email.data
+            user.bio = form.bio.data
 
-        # g.user.image_url = form.image_url.data or DEFAULT
+            user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
 
-        if request.form.get("image_url") == "":
-            g.user.image_url = DEFAULT_IMAGE_URL
-        else:
-            g.user.image_url = request.form.get("image_url")
+            user.header_image_url = (
+                form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+            )
 
-        if request.form.get("header_image_url") == "":
-            g.user.header_image_url = DEFAULT_HEADER_IMAGE_URL
-        else:
-            g.user.header_image_url = request.form.get("header_image_url")
-
-        if User.authenticate(g.user.username, request.form.get('password')):
             db.session.commit()
-            return redirect(f'/users/{g.user.id}')
-
-        #TODO: Wrap more logic in authentication
-        #TODO: Trim defensive logic
+            return redirect(f'/users/{user.id}')
 
     flash("Invalid password")
-    return render_template('users/edit.html', user=g.user, form=form)
+    return render_template('users/edit.html', user=user, form=form)
 
 
 @app.post('/users/delete')
@@ -301,16 +292,21 @@ def delete_user():
 
     Redirect to signup page.
     """
-    #TODO: CSRF form, duh.
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    form = g.csrf_form
 
-    db.session.delete(g.user)
-    db.session.commit()
+    if form.validate_on_submit():
+        do_logout()
+
+        db.session.delete(g.user)
+        db.session.commit()
+        flash("We'll miss you!")
+    else:
+        raise Unauthorized()
 
     return redirect("/signup")
 

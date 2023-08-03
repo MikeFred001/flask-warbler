@@ -24,16 +24,19 @@
             {% if g.user.id == message.user.id %}
             <form method="POST"
                   action="/messages/{{ message.id }}/delete">
+                  {{ form.hidden_tag() }}
               <button class="btn btn-outline-danger">Delete</button>
             </form>
             {% elif g.user.is_following(message.user) %}
             <form method="POST"
                   action="/users/stop-following/{{ message.user.id }}">
+                  {{ form.hidden_tag() }}
               <button class="btn btn-primary">Unfollow</button>
             </form>
             {% else %}
             <form method="POST"
                   action="/users/follow/{{ message.user.id }}">
+                  {{ form.hidden_tag() }}
               <button class="btn btn-outline-primary btn-sm">
                 Follow
               </button>
