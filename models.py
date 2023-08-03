@@ -161,6 +161,17 @@ class User(db.Model):
         return len(found_user_list) == 1
 
 
+    def has_liked(self, message):
+        """Accepts message id, checks if message is in user's liked_messages.
+        Returns boolean."""
+
+        liked_message = [
+            msg.id for msg in self.liked_messages if msg == message
+        ]
+
+        return liked_message
+
+
 class Message(db.Model):
     """An individual message ("warble")."""
 

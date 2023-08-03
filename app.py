@@ -368,6 +368,34 @@ def delete_message(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+##############################################################################
+# Likes
+
+@app.post('/users/like/<int:message_id>')
+def handle_like(message_id):
+
+    form = g.csrf_form
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    msg = Message.query.get_or_404(message_id)
+
+    liked_messages = [ m.message_id for m in g.user.liked_messages]
+
+    if message_id in liked_messages:
+        g.user.liked_messages.delete(msg)
+        db.session.commit()
+
+    else:
+        g.user.liked_messages.append(msg)
+        db.session.commit()
+
+#TODO: Handle returns for conditional (w form)
+#TODO: Form validate on submit here
+#TODO: Craft instance of LikedMessage using g.user.id and message_id
+
 
 
 ##############################################################################
