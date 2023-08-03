@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-# SECRET_KEY = os.environ['SECRET_KEY']
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
@@ -131,8 +130,7 @@ def logout():
 
     if form.validate_on_submit():
         do_logout()
-        flash ("we hate you.")
-        # Make sure to change this
+        flash ("Successfully logged out.")
     else:
         raise Unauthorized()
 
@@ -184,7 +182,6 @@ def show_user(user_id):
         user=user,
         form=g.csrf_form
     )
-    # May need to rework to show target user's profile
 
 
 @app.get('/users/<int:user_id>/following')
@@ -260,8 +257,9 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
-
+    """GET: Shows user profile edit page.
+    POST: Update profile for current user and redirects to user detail page."""
+    #TODO: Reassign g.user to global variable name
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -269,9 +267,12 @@ def profile():
     form = UserProfileEditForm(obj=g.user)
 
     if form.validate_on_submit():
+        #form.username.data etc.
         g.user.username = request.form.get('username', g.user.username)
         g.user.email = request.form.get('email', g.user.email)
         g.user.bio = request.form.get('bio')
+
+        # g.user.image_url = form.image_url.data or DEFAULT
 
         if request.form.get("image_url") == "":
             g.user.image_url = DEFAULT_IMAGE_URL
@@ -287,6 +288,9 @@ def profile():
             db.session.commit()
             return redirect(f'/users/{g.user.id}')
 
+        #TODO: Wrap more logic in authentication
+        #TODO: Trim defensive logic
+
     flash("Invalid password")
     return render_template('users/edit.html', user=g.user, form=form)
 
@@ -297,6 +301,7 @@ def delete_user():
 
     Redirect to signup page.
     """
+    #TODO: CSRF form, duh.
 
     if not g.user:
         flash("Access unauthorized.", "danger")
