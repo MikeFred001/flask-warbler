@@ -84,12 +84,18 @@ class User(db.Model):
 
     password = db.Column(
         db.String(100),
-        nullable=False,
+        nullable=False
     )
 
     messages = db.relationship('Message', backref="user")
 
-    liked_messages = db.relationship('LikedMessage', backref="user")
+    # liked_messages = db.relationship('LikedMessage', backref="user")
+
+    liked_messages = db.relationship(
+        'Message',
+        secondary="liked_messages",
+        backref='users'
+    )
 
     followers = db.relationship(
         "User",
@@ -161,15 +167,18 @@ class User(db.Model):
         return len(found_user_list) == 1
 
 
-    def has_liked(self, message):
+    def has_liked(self, message_id):
         """Accepts message id, checks if message is in user's liked_messages.
         Returns boolean."""
 
-        liked_message = [
-            msg.id for msg in self.liked_messages if msg == message
+        liked_message_id = [
+            msg.message_id
+            for msg in self.liked_messages
+            if msg.message_id == message_id
         ]
 
-        return liked_message
+        return liked_message_id
+    #Maybe refactor at the end. likes instead of liked_messages
 
 
 class Message(db.Model):
@@ -216,8 +225,6 @@ class LikedMessage(db.Model):
         db.ForeignKey('messages.id', ondelete="cascade"),
         primary_key=True,
     )
-
-
 
 
 def connect_db(app):

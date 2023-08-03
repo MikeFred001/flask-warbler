@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFForm, UserProfileEditForm
-from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
+from models import db, connect_db, User, Message, LikedMessage, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
 
 from werkzeug.exceptions import Unauthorized
 
@@ -225,13 +225,18 @@ def start_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
+    else:
+        return Unauthorized()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -243,14 +248,19 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
+    form = g.csrf_form
+
     followed_user = User.query.get_or_404(follow_id)
 
     if not g.user or followed_user not in g.user.following:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+        g.user.following.remove(followed_user)
+        db.session.commit()
+    else:
+        return Unauthorized()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -368,11 +378,13 @@ def delete_message(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+
+
 ##############################################################################
 # Likes
 
 @app.post('/users/like/<int:message_id>')
-def handle_like(message_id):
+def like(message_id):
 
     form = g.csrf_form
 
@@ -380,21 +392,35 @@ def handle_like(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get_or_404(message_id)
-
-    liked_messages = [ m.message_id for m in g.user.liked_messages]
-
-    if message_id in liked_messages:
-        g.user.liked_messages.delete(msg)
+    if form.validate_on_submit():
+        liked_message = LikedMessage(g.user.id, message_id)
+        g.user.liked_messages.append(liked_message)
+        db.session.add(liked_message)
         db.session.commit()
-
     else:
-        g.user.liked_messages.append(msg)
-        db.session.commit()
+        return Unauthorized()
 
-#TODO: Handle returns for conditional (w form)
-#TODO: Form validate on submit here
-#TODO: Craft instance of LikedMessage using g.user.id and message_id
+    return redirect('/users/likes')
+
+
+@app.post('/users/remove-like/<int:message_id>')
+def remove_like(message_id):
+    """Remove like from a liked message"""
+
+    form = g.csrf_form
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    if form.validate_on_submit():
+        liked_message = LikedMessage.query.get_or_404(message_id)
+        g.user.liked_messages.remove(liked_message)
+        db.session.commit()
+    else:
+        return Unauthorized()
+
+    return redirect('/')
 
 
 

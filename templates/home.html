@@ -58,16 +58,16 @@
               <p>{{ msg.text }}</p>
 
               {% if g.user %}
-              {% if g.user.has_liked() %}
-              <form action="/users/like/{{ msg.id }}" method="POST">
+              {% if g.user.has_liked(msg.id) %}
+              <form action="/users/remove-like/{{ msg.id }}" method="POST">
                 {{ form.hidden_tag() }}
-                <a><button  id="like-button" class="btn btn-outline-primary btn-sm bi bi-heart-fill">
+                <a><button  id="remove_like" class="btn btn-outline-primary btn-sm bi bi-heart-fill">
                 </button></a>
               </form>
               {% else %}
               <form action="/users/like/{{ msg.id }}" method="POST">
                 {{ form.hidden_tag() }}
-                <a><button  id="like-button" class="btn btn-outline-primary btn-sm bi bi-heart">
+                <a><button  id="like" class="btn btn-outline-primary btn-sm bi bi-heart">
                 </button></a>
               </form>
               {% endif %}
