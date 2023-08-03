@@ -6,8 +6,8 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFForm
-from models import db, connect_db, User, Message
+from forms import UserAddForm, LoginForm, MessageForm, CSRFForm, UserProfileEditForm
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
 
 from werkzeug.exceptions import Unauthorized
 
@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -262,12 +262,33 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    #form =
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    return render_template('users/edit.html', user=g.user)
+    form = UserProfileEditForm(obj=g.user)
+
+    if form.validate_on_submit():
+        g.user.username = request.form.get('username', g.user.username)
+        g.user.email = request.form.get('email', g.user.email)
+        g.user.bio = request.form.get('bio')
+
+        if request.form.get("image_url") == "":
+            g.user.image_url = DEFAULT_IMAGE_URL
+        else:
+            g.user.image_url = request.form.get("image_url")
+
+        if request.form.get("header_image_url") == "":
+            g.user.header_image_url = DEFAULT_HEADER_IMAGE_URL
+        else:
+            g.user.header_image_url = request.form.get("header_image_url")
+
+        if User.authenticate(g.user.username, request.form.get('password')):
+            db.session.commit()
+            return redirect(f'/users/{g.user.id}')
+
+    flash("Invalid password")
+    return render_template('users/edit.html', user=g.user, form=form)
 
 
 @app.post('/users/delete')
@@ -360,11 +381,17 @@ def homepage():
     """
 
     if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+        valid_ids = [ f.id for f in g.user.following ]
+        valid_ids.append(g.user.id)
+
+        messages = (
+            Message.
+            query.
+            filter(Message.user_id.in_(valid_ids))
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+            .all()
+        )
 
         return render_template('home.html', messages=messages, form=g.csrf_form)
 
