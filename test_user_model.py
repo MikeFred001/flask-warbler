@@ -45,7 +45,7 @@ class UserModelTestCase(TestCase):
 
     def test_user_model(self):
         u1 = User.query.get(self.u1_id)
-        #hashed_u1_password = bcrypt.generate_password_hash("password").decode('UTF-8')
+        u1_hash_check = bcrypt.check_password_hash(u1.password, "password")
 
         # User should have no messages & no followers
         self.assertEqual(len(u1.messages), 0)
@@ -54,8 +54,8 @@ class UserModelTestCase(TestCase):
 
         self.assertEqual(u1.username, "u1")
         self.assertEqual(u1.email, "u1@email.com")
-        # self.assertEqual(u1.password, hashed_u1_password) #different hashes?
         self.assertEqual(u1.image_url, DEFAULT_IMAGE_URL)
+        self.assertTrue(u1_hash_check) #different hashes?
 
 
 class TestUserMethods(TestCase):
@@ -120,12 +120,22 @@ class TestUserMethods(TestCase):
 
         signed_up_user = User.signup(u1.username, u1.email, u1.password, u1.image_url)
 
+        u1_hash_check = bcrypt.check_password_hash(u1.password, "password")
+
         self.assertEqual(signed_up_user.username, u1.username)
         self.assertEqual(signed_up_user.email, u1.email)
-        #self.assertEqual(signed_up_user.password, u1.password)
         self.assertEqual(signed_up_user.image_url, u1.image_url)
+        self.assertIn(signed_up_user, db.session)
+        self.assertTrue(u1_hash_check)
 
-        self.assertIn(db.session, signed_up_user)
 
+    def test_user_authenticate(self):
+        """Tests user authentication method"""
 
+        u1 = User.query.get(self.u1_id)
 
+        auth_user = User.authenticate(u1.username, "password")
+
+        self.assertTrue(auth_user)
+        self.assertFalse(User.authenticate("hello", u1.password))
+        self.assertFalse(User.authenticate(u1.username, "notpassword"))

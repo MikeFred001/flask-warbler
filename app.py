@@ -316,7 +316,8 @@ def delete_user():
 
         do_logout()
 
-        # for loop [ db.session.delete(message) for message in g.user.messages ]
+        for message in g.user.messages:
+            db.session.delete(message)
 
         db.session.delete(g.user)
 

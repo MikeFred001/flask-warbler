@@ -120,8 +120,6 @@ class User(db.Model):
         backref="users_who_liked"
     )
 
-    #TODO: document relational functionality
-
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -198,7 +196,12 @@ class User(db.Model):
 
 
 class Message(db.Model):
-    """An individual message ("warble")."""
+    """An individual message ("warble").
+
+    All messages belonging to a user can be accessed with "user.messages"
+
+    All liked messages can be accessed with "user.liked_messages"
+    """
 
     __tablename__ = 'messages'
 
