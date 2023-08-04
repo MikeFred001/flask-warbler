@@ -35,7 +35,7 @@ class Follow(db.Model):
         primary_key=True,
     )
 
-class Like (db.Model):
+class Like(db.Model):
     """A liked message"""
 
     __tablename__ = "likes"
@@ -106,14 +106,6 @@ class User(db.Model):
 
     messages = db.relationship('Message', backref="user")
 
-    #liked_messages = db.relationship('LikedMessage', backref="user")
-
-    # liked_messages = db.relationship(
-    #     'Message',
-    #     secondary="liked_messages",
-    #     backref='user_who_liked'
-    # )
-
     followers = db.relationship(
         "User",
         secondary="follows",
@@ -122,13 +114,13 @@ class User(db.Model):
         backref="following",
     )
 
-
     liked_messages = db.relationship(
         "Message",
         secondary= "likes",
         backref="users_who_liked"
     )
 
+    #TODO: document relational functionality
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -192,7 +184,9 @@ class User(db.Model):
 
     def has_liked(self, message_id):
         """Accepts message id, checks if message is in user's liked_messages.
-        Returns boolean."""
+
+        Returns true/false.
+        """
 
         liked_message_id = [
             msg.id
@@ -200,8 +194,7 @@ class User(db.Model):
             if msg.id == message_id
         ]
 
-        return liked_message_id
-    #Maybe refactor at the end. likes instead of liked_messages
+        return len(liked_message_id) == 1
 
 
 class Message(db.Model):

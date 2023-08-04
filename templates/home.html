@@ -57,21 +57,21 @@
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
 
-              {% if g.user %}
               {% if msg.user_id != g.user.id %}
               {% if g.user.has_liked(msg.id) %}
               <form action="/users/remove-like/{{ msg.id }}" method="POST">
+                <input type="hidden" name="came-from" value="/">
                 {{ form.hidden_tag() }}
                 <a><button  id="remove_like" class="btn btn-outline-primary btn-sm bi bi-heart-fill">
                 </button></a>
               </form>
               {% else %}
               <form action="/users/like/{{ msg.id }}" method="POST">
+                <input type="hidden" name="came-from" value="/">
                 {{ form.hidden_tag() }}
                 <a><button  id="like" class="btn btn-outline-primary btn-sm bi bi-heart">
                 </button></a>
               </form>
-              {% endif %}
               {% endif %}
               {% endif %}
             </div>

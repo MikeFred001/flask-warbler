@@ -301,7 +301,7 @@ def handle_user_profile_edit():
 
 @app.post('/users/delete')
 def delete_user():
-    """Delete user.
+    """Delete user profile.
 
     Redirect to signup page.
     """
@@ -313,10 +313,15 @@ def delete_user():
     form = g.csrf_form
 
     if form.validate_on_submit():
+
         do_logout()
 
+        # for loop [ db.session.delete(message) for message in g.user.messages ]
+
         db.session.delete(g.user)
+
         db.session.commit()
+
         flash("We'll miss you!")
     else:
         raise Unauthorized()
@@ -399,21 +404,25 @@ def like(message_id):
     """
 
     form = g.csrf_form
+    came_from = request.form['came-from']
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     if form.validate_on_submit():
-
         message = Message.query.get_or_404(message_id)
+        if message.user_id != g.user.id:
 
-        g.user.liked_messages.append(message)
-        db.session.commit()
+            g.user.liked_messages.append(message)
+            db.session.commit()
+        else:
+            flash("High-fiving yourself is not a good look.")
+            return redirect(came_from)
     else:
         return Unauthorized()
 
-    return redirect(f'/users/likes/{g.user.id}')
+    return redirect(came_from)
 
 
 @app.post('/users/remove-like/<int:message_id>')
@@ -421,6 +430,7 @@ def remove_like(message_id):
     """Remove like from a liked message. Redirect to home page."""
 
     form = g.csrf_form
+    came_from = request.form['came-from']
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -433,14 +443,12 @@ def remove_like(message_id):
     else:
         return Unauthorized()
 
-    return redirect('/')
+    return redirect(came_from)
 
 
 @app.get('/users/likes/<int:user_id>')
 def show_likes_page(user_id):
     """Render liked messages page."""
-
-    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -451,7 +459,7 @@ def show_likes_page(user_id):
     return render_template(
         'users/liked.html',
         user=user,
-        form=form
+        form=g.csrf_form
     )
 
 
