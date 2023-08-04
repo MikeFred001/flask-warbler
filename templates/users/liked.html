@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Likes</h1>
 <ul class="list-group" id="messages">
-  {% for msg in messages %}
+  {% for msg in user.liked_messages %}
   <li class="list-group-item">
     <a href="/messages/{{ msg.id }}" class="message-link" />
     <a href="/users/{{ msg.user.id }}">

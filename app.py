@@ -40,7 +40,7 @@ def add_user_to_g():
 
 @app.before_request
 def add_csrf_to_g():
-    """Adds CSRF form to Flask global if ..."""
+    """Adds CSRF form to Flask global"""
 
     g.csrf_form = CSRFForm()
 
@@ -222,7 +222,7 @@ def show_followers(user_id):
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
 
     form = g.csrf_form
@@ -245,7 +245,7 @@ def start_following(follow_id):
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
 
     form = g.csrf_form
@@ -268,7 +268,10 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def handle_user_profile_edit():
     """GET: Shows user profile edit page.
-    POST: Update profile for current user and redirects to user detail page."""
+
+    POST: Update profile for current user and redirects to user detail page.
+    """
+
     user = g.user
 
     if not user:
@@ -357,7 +360,12 @@ def show_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg, form=g.csrf_form)
+
+    return render_template(
+        'messages/show.html',
+        message=msg,
+        form=g.csrf_form
+    )
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -385,8 +393,10 @@ def delete_message(message_id):
 
 @app.post('/users/like/<int:message_id>')
 def like(message_id):
-    """Like a message. Append message to user.liked_messages.
-    Redirect to user's liked messages page."""
+    """Like a message. Append message to users liked message list.
+
+    Redirect to user's liked messages page.
+    """
 
     form = g.csrf_form
 
@@ -429,6 +439,7 @@ def remove_like(message_id):
 @app.get('/users/likes/<int:user_id>')
 def show_likes_page(user_id):
     """Render liked messages page."""
+
     form = g.csrf_form
 
     if not g.user:
@@ -439,7 +450,6 @@ def show_likes_page(user_id):
 
     return render_template(
         'users/liked.html',
-        messages=user.liked_messages,
         user=user,
         form=form
     )
@@ -471,7 +481,11 @@ def homepage():
             .all()
         )
 
-        return render_template('home.html', messages=messages, form=g.csrf_form)
+        return render_template(
+            'home.html',
+            messages=messages,
+            form=g.csrf_form
+        )
 
     else:
         return render_template('home-anon.html')
