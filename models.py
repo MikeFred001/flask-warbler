@@ -35,6 +35,23 @@ class Follow(db.Model):
         primary_key=True,
     )
 
+class Like (db.Model):
+    """A liked message"""
+
+    __tablename__ = "likes"
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
 
 class User(db.Model):
     """User in the system."""
@@ -89,13 +106,13 @@ class User(db.Model):
 
     messages = db.relationship('Message', backref="user")
 
-    # liked_messages = db.relationship('LikedMessage', backref="user")
+    #liked_messages = db.relationship('LikedMessage', backref="user")
 
-    liked_messages = db.relationship(
-        'Message',
-        secondary="liked_messages",
-        backref='users'
-    )
+    # liked_messages = db.relationship(
+    #     'Message',
+    #     secondary="liked_messages",
+    #     backref='user_who_liked'
+    # )
 
     followers = db.relationship(
         "User",
@@ -105,6 +122,12 @@ class User(db.Model):
         backref="following",
     )
 
+
+    liked_messages = db.relationship(
+        "Message",
+        secondary= "likes",
+        backref="users_who_liked"
+    )
 
 
     def __repr__(self):
@@ -172,9 +195,9 @@ class User(db.Model):
         Returns boolean."""
 
         liked_message_id = [
-            msg.message_id
+            msg.id
             for msg in self.liked_messages
-            if msg.message_id == message_id
+            if msg.id == message_id
         ]
 
         return liked_message_id
@@ -206,24 +229,6 @@ class Message(db.Model):
         db.Integer,
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
-    )
-
-
-class LikedMessage(db.Model):
-    """A liked message"""
-
-    __tablename__ = "liked_messages"
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete="cascade"),
-        primary_key=True,
-    )
-
-    message_id = db.Column(
-        db.Integer,
-        db.ForeignKey('messages.id', ondelete="cascade"),
-        primary_key=True,
     )
 
 

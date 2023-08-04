@@ -58,6 +58,7 @@
               <p>{{ msg.text }}</p>
 
               {% if g.user %}
+              {% if msg.user_id != g.user.id %}
               {% if g.user.has_liked(msg.id) %}
               <form action="/users/remove-like/{{ msg.id }}" method="POST">
                 {{ form.hidden_tag() }}
@@ -70,6 +71,7 @@
                 <a><button  id="like" class="btn btn-outline-primary btn-sm bi bi-heart">
                 </button></a>
               </form>
+              {% endif %}
               {% endif %}
               {% endif %}
             </div>

@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFForm, UserProfileEditForm
-from models import db, connect_db, User, Message, LikedMessage, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
 
 from werkzeug.exceptions import Unauthorized
 
@@ -266,7 +266,7 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
-def profile():
+def handle_user_profile_edit():
     """GET: Shows user profile edit page.
     POST: Update profile for current user and redirects to user detail page."""
     user = g.user
@@ -385,6 +385,8 @@ def delete_message(message_id):
 
 @app.post('/users/like/<int:message_id>')
 def like(message_id):
+    """Like a message. Append message to user.liked_messages.
+    Redirect to user's liked messages page."""
 
     form = g.csrf_form
 
@@ -393,19 +395,20 @@ def like(message_id):
         return redirect("/")
 
     if form.validate_on_submit():
-        liked_message = LikedMessage(g.user.id, message_id)
-        g.user.liked_messages.append(liked_message)
-        db.session.add(liked_message)
+
+        message = Message.query.get_or_404(message_id)
+
+        g.user.liked_messages.append(message)
         db.session.commit()
     else:
         return Unauthorized()
 
-    return redirect('/users/likes')
+    return redirect(f'/users/likes/{g.user.id}')
 
 
 @app.post('/users/remove-like/<int:message_id>')
 def remove_like(message_id):
-    """Remove like from a liked message"""
+    """Remove like from a liked message. Redirect to home page."""
 
     form = g.csrf_form
 
@@ -414,13 +417,33 @@ def remove_like(message_id):
         return redirect("/")
 
     if form.validate_on_submit():
-        liked_message = LikedMessage.query.get_or_404(message_id)
-        g.user.liked_messages.remove(liked_message)
+        message = Message.query.get_or_404(message_id)
+        g.user.liked_messages.remove(message)
         db.session.commit()
     else:
         return Unauthorized()
 
     return redirect('/')
+
+
+@app.get('/users/likes/<int:user_id>')
+def show_likes_page(user_id):
+    """Render liked messages page."""
+    form = g.csrf_form
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+
+    return render_template(
+        'users/liked.html',
+        messages=user.liked_messages,
+        user=user,
+        form=form
+    )
+
 
 
 

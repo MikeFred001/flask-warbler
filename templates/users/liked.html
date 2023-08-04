@@ -1,7 +1,37 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<h1>Likes</h1>
+<ul class="list-group" id="messages">
+  {% for msg in messages %}
+  <li class="list-group-item">
+    <a href="/messages/{{ msg.id }}" class="message-link" />
+    <a href="/users/{{ msg.user.id }}">
+      <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
+    </a>
+    <div class="message-area">
+      <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
+      <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
+      <p>{{ msg.text }}</p>
 
+      {% if user %}
+      {% if user.has_liked(msg.id) %}
+      <form action="/users/remove-like/{{ msg.id }}" method="POST">
+        {{ form.hidden_tag() }}
+        <a><button id="remove_like" class="btn btn-outline-primary btn-sm bi bi-heart-fill">
+          </button></a>
+      </form>
+      {% else %}
+      <form action="/users/like/{{ msg.id }}" method="POST">
+        {{ form.hidden_tag() }}
+        <a><button id="like" class="btn btn-outline-primary btn-sm bi bi-heart">
+          </button></a>
+      </form>
+      {% endif %}
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
 
-
-{ % endblock %}
+{% endblock %}
