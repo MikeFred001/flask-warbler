@@ -139,3 +139,5 @@ class TestUserMethods(TestCase):
         self.assertTrue(auth_user)
         self.assertFalse(User.authenticate("hello", u1.password))
         self.assertFalse(User.authenticate(u1.username, "notpassword"))
+
+

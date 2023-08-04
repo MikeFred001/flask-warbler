@@ -57,6 +57,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
     def test_add_message(self):
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
+
         with app.test_client() as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -66,5 +67,6 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             resp = c.post("/messages/new", data={"text": "Hello"})
 
             self.assertEqual(resp.status_code, 302)
+            self.assertEqual()
 
             Message.query.filter_by(text="Hello").one()
